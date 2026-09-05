@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink font-sans antialiased;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'ss01';
+  text-rendering: optimizeLegibility;
+}
+
+/* tabular figures for money / metrics / ids */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* --- scrollbars --- */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-line-strong rounded-full;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #c3c3bb;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::selection {
+  background: rgba(0, 183, 205, 0.22);
+}
+
+@layer components {
+  /* --- surfaces --- */
+  .card {
+    @apply rounded-lg border border-line bg-paper;
+  }
+
+  .stat-label {
+    @apply text-[11px] font-semibold uppercase tracking-[0.07em] text-faint;
+  }
+
+  /* --- badges / pills --- */
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded font-medium;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded border border-line bg-canvas px-2 py-0.5 text-[11px] font-medium text-muted;
+  }
+
+  /* --- buttons --- */
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-md px-3.5 py-2 text-[13px] font-semibold
+           transition-colors duration-150 outline-none
+           focus-visible:ring-2 focus-visible:ring-trust/40 focus-visible:ring-offset-1 focus-visible:ring-offset-canvas
+           disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply btn bg-ink text-white hover:bg-ink-700;
+  }
+  .btn-secondary {
+    @apply btn border border-line bg-paper text-ink hover:bg-canvas hover:border-line-strong;
+  }
+  .btn-danger {
+    @apply btn bg-signal text-white hover:bg-signal-deep;
+  }
+  .btn-ghost {
+    @apply btn text-muted hover:bg-canvas hover:text-ink;
+  }
+  .btn-xs {
+    @apply px-2.5 py-1 text-xs;
+  }
+
+  /* --- inputs --- */
+  .input {
+    @apply w-full rounded-md border border-line bg-paper px-3 py-2 text-[13px] text-ink placeholder:text-faint
+           outline-none transition-colors focus:border-trust focus:ring-2 focus:ring-trust/25;
+  }
+
+  /* --- table --- */
+  .th {
+    @apply px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-faint;
+  }
+  .td {
+    @apply px-4 py-3 text-[13px] text-ink;
+  }
+}
+
+/* --- range slider (used in Policy) --- */
+input[type='range'].rk {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: #e5e5e0;
+  outline: none;
+}
+input[type='range'].rk::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: #151515;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(21, 21, 21, 0.25);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+input[type='range'].rk::-webkit-slider-thumb:hover {
+  transform: scale(1.08);
+}
+input[type='range'].rk::-moz-range-thumb {
+  height: 18px;
+  width: 18px;
+  border-radius: 999px;
+  background: #151515;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(21, 21, 21, 0.25);
+  cursor: pointer;
+}

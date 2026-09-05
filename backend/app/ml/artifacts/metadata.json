@@ -1,0 +1,38 @@
+{
+  "feature_columns": [
+    "amount",
+    "log_amount",
+    "hour",
+    "day_of_week",
+    "is_night",
+    "category_risk",
+    "channel_risk",
+    "card_type_risk",
+    "is_international",
+    "billing_shipping_mismatch",
+    "email_domain_risk",
+    "bin_risk",
+    "account_age_days",
+    "is_new_account",
+    "amount_to_avg_ratio",
+    "card_txn_count",
+    "velocity_card_1h",
+    "velocity_card_24h",
+    "velocity_device_1h",
+    "velocity_device_24h",
+    "velocity_ip_1h",
+    "distinct_cards_device_24h",
+    "distinct_emails_device_24h",
+    "time_since_last_txn_hrs"
+  ],
+  "fraud_threshold": 0.16,
+  "chargeback_threshold": 0.22,
+  "trained_at": "2026-09-04T13:53:40.815143+00:00",
+  "n_train": 10457,
+  "n_test": 2615,
+  "cost_params": {
+    "chargeback_fee": 1500.0,
+    "fp_margin": 0.18,
+    "fp_friction": 40.0
+  }
+}
