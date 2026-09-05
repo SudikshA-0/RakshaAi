@@ -1,189 +1,799 @@
-# RakshaAI — Merchant Risk Command Center
+# 🛡️ RakshaAI — Merchant Risk Command Center
 
-A defense-only AI risk platform that prevents merchant losses from **fraud, chargebacks, and abuse** in real time. Every transaction is scored by two gradient-boosted models, run through a cost-sensitive decision engine (ALLOW / STEP-UP / HOLD / BLOCK), explained with reason codes, and surfaced on a live command-center dashboard with a human-in-the-loop review queue.
+> **Stop fraud. Prevent chargebacks. Protect revenue.**
 
-> **Strictly defensive.** The system only *detects and blocks* malicious activity. It contains nothing offense-capable — no attack tooling, no evasion, no targeting. The "Simulate Attack" button generates synthetic hostile traffic **against our own engine** purely to demonstrate detection.
+RakshaAI is an AI-powered merchant risk decisioning platform that evaluates payment transactions in real time, predicts both fraud and future chargeback risk, detects coordinated abuse patterns, and recommends the lowest-cost safe action — without turning legitimate customers away unnecessarily.
 
 ---
 
-## What's inside
+## 🚨 The Problem
 
-| Layer | Tech |
-|-------|------|
-| Frontend | Vite + React 18, Tailwind CSS, Recharts, framer-motion, lucide-react |
-| Backend | FastAPI, SQLAlchemy 2.0, Pydantic v2 |
-| ML | XGBoost (fraud + chargeback models), scikit-learn, SHAP-style reason codes, cost-sensitive threshold tuning |
-| Database | SQLite by default (zero-config); swappable to Postgres via one env var |
+Payment fraud is not simply a binary fraud / not-fraud problem.
 
-### Core flow
+A merchant has to balance multiple risks simultaneously:
+- 💳 **fraudulent transactions**
+- 🔄 **future chargebacks**
+- 👤 **account takeover**
+- 🧪 **card testing attacks**
+- 🕸️ **coordinated fraud rings**
+- 💰 **high-value fraudulent purchases**
+- ⚠️ **false positives that reject genuine customers**
+
+A system that only asks:
+
+> *"Is this transaction fraudulent?"*
+
+misses an important business question:
+
+> *"What action should the merchant take right now, and what will that action cost?"*
+
+- **Blocking everything suspicious** reduces fraud — but can also reject legitimate customers.
+- **Allowing everything** improves conversion — but increases losses.
+
+**RakshaAI approaches this as a risk + decision + economics problem.**
+
+---
+
+## 💡 The Solution
+
+RakshaAI evaluates every transaction through a real-time risk pipeline:
+
 ```
-transaction → fraud model + chargeback model → blended risk score
-           → policy/threshold engine → decision (ALLOW/STEP_UP/HOLD/BLOCK)
-           → reason codes + ring detection → database → live dashboard
-                                                      → analyst review → feedback loop
+Customer
+   │
+   ▼
+Merchant / Payment Gateway
+   │
+   ▼
+┌─────────────────────────────┐
+│         RakshaAI            │
+│                             │
+│  Feature Enrichment         │
+│          ↓                  │
+│  Velocity Detection         │
+│          ↓                  │
+│  Fraud Model ──────┐        │
+│                    ├──► Risk│
+│  Chargeback Model ─┘        │
+│          ↓                  │
+│  Ring Detection             │
+│          ↓                  │
+│  Explainability             │
+│          ↓                  │
+│  Decision Engine             │
+└──────────────┬──────────────┘
+               │
+       ┌───────┼────────┐
+       ▼       ▼        ▼
+     ALLOW   STEP_UP   HOLD/BLOCK
+       │       │        │
+       └───────┼────────┘
+               ▼
+        Merchant System
+               │
+               ▼
+       Risk Command Center
+```
+
+The platform provides both:
+
+- ⚡ **Real-time decisioning**  
+  Evaluate transactions and return an action immediately.
+
+- 🧠 **AI-assisted investigation**  
+  Ask natural-language questions about merchant transactions, risk decisions, trends, and money saved.
+
+---
+
+## 🎯 Core Decisioning
+
+RakshaAI uses two separate ML models:
+
+1. **Fraud Risk Model**  
+   Predicts the probability that a transaction is fraudulent.
+
+2. **Chargeback Risk Model**  
+   Predicts the probability that the transaction may eventually result in a chargeback.
+
+These signals are combined into a single business-oriented risk score:
+
+$$\text{Risk Score} = (1 - w) \times \text{Fraud Score} + w \times \text{Chargeback Score}$$
+
+> **Default:** $w = 0.35$
+
+This allows the merchant's risk appetite to influence how aggressively the system responds.
+
+---
+
+## 💰 Risk Is Not Just Accuracy
+
+A high-performing fraud model is not automatically a good business decision.
+
+RakshaAI therefore estimates potential loss:
+
+$$\text{Expected Loss} = \text{Fraud Score} \times (\text{Transaction Amount} + ₹1,500)$$
+
+The **₹1,500** component represents the configured chargeback-related cost used by the decisioning system.
+
+The decision engine then considers the mitigation impact of each action:
+
+| Action | Mitigation |
+| :--- | :--- |
+| **ALLOW** | 0% |
+| **STEP_UP** | 70% |
+| **HOLD** | 100% |
+| **BLOCK** | 100% |
+
+This allows RakshaAI to optimize around:
+
+> *"How much risk can we mitigate without unnecessarily hurting good customers?"*
+
+---
+
+## 🧠 Decision Engine
+
+RakshaAI converts model predictions into operational actions:
+
+```
+                    Transaction
+                         │
+                         ▼
+                  Risk Evaluation
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+        Low Risk      Medium Risk     High Risk
+          │              │              │
+          ▼              ▼              ▼
+        ALLOW          STEP_UP      HOLD / BLOCK
+```
+
+The system also considers:
+- merchant risk appetite
+- transaction amount
+- fraud probability
+- chargeback probability
+- velocity signals
+- device activity
+- card activity
+- coordinated activity
+- attack typology
+
+---
+
+## 🕸️ Fraud Ring Detection
+
+Individual transaction scoring is not always enough.
+
+Attackers can distribute activity across multiple cards while reusing infrastructure such as:
+- devices
+- IP addresses
+- customer identities
+- payment patterns
+
+RakshaAI therefore calculates velocity and ring signals.
+
+Examples include:
+- **Distinct cards on device / 24h**
+- **Device transaction velocity / 1h**
+
+A concentrated cluster of payment activity can trigger additional risk treatment.
+
+This enables RakshaAI to identify:
+
+> *"These transactions may not be independent."*
+
+---
+
+## 🧨 Attack Typologies
+
+RakshaAI's simulation and risk pipeline supports multiple attack patterns:
+
+- 💳 **Card Testing**  
+  Large numbers of low-value transactions designed to validate stolen cards.
+
+- 👤 **Account Takeover**  
+  A legitimate customer account is hijacked and used from a new device or location with unusual transaction behavior.
+
+- 💰 **High-Value Bust-Out**  
+  A suspicious customer attempts unusually large purchases to maximize fraudulent value.
+
+- 🕸️ **Ring Risk**  
+  Multiple transactions exhibit coordinated behavior across cards, devices, or other signals.
+
+---
+
+## 🔍 Explainable Risk
+
+A risk score alone is not enough for a fraud analyst.
+
+RakshaAI provides reason codes and supporting signals so analysts can understand:
+
+> **Why was this transaction risky?**
+>
+> $$\downarrow$$
+>
+> - High transaction amount
+> - New device
+> - Shipping mismatch
+> - Unusual velocity
+> - Multiple cards on device
+>
+> $$\downarrow$$
+>
+> **Elevated fraud + chargeback risk**
+>
+> $$\downarrow$$
+>
+> **Recommended action: HOLD**
+
+The goal is to make the system auditable and actionable, rather than a black box.
+
+---
+
+## 🤖 AI Analyst
+
+RakshaAI includes an AI-powered merchant risk analyst.
+
+Instead of manually filtering dashboards, merchants can ask questions such as:
+- *"How much money did we save today?"*
+- *"Why was transaction 1855 blocked?"*
+- *"Show me suspicious transactions."*
+- *"What happened with this customer?"*
+- *"What are the biggest risk patterns we're seeing?"*
+- *"Why is the blended risk score better than using only fraud probability?"*
+
+The AI Analyst combines:
+
+```
+Merchant Data
+      +
+Risk Engine
+      +
+RAG Knowledge
+      +
+LLM
+      ↓
+Natural-language answer
+```
+
+### Important architectural principle
+
+**The LLM does not make the core fraud decision.**
+
+The deterministic risk pipeline remains responsible for:
+- scoring
+- decisioning
+- thresholds
+- expected loss
+- policy enforcement
+
+The LLM acts as an **investigation and intelligence layer** over those systems.
+
+This makes the architecture more reliable and auditable.
+
+---
+
+## 🔐 SaaS Architecture
+
+RakshaAI is designed as a multi-tenant SaaS platform.
+
+```
+                 ┌─────────────────────┐
+                 │      Merchant A     │
+                 └──────────┬──────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │      RakshaAI       │
+                 │                     │
+                 │ Tenant Isolation    │
+                 │ JWT Authentication  │
+                 │ API Keys            │
+                 │ Risk Engine         │
+                 │ AI Analyst          │
+                 └──────────┬──────────┘
+                            │
+                 ┌──────────▼──────────┐
+                 │    PostgreSQL       │
+                 └─────────────────────┘
+```
+
+Every organization operates within its own tenant boundary.
+
+Tenant-scoped access is applied to:
+- transactions
+- cases
+- analytics
+- policies
+- API keys
+- webhooks
+- AI conversations
+- RAG data
+
+---
+
+## 🔑 Developer API
+
+Merchants can integrate RakshaAI directly into their payment flow.
+
+**Example Request:**
+
+```http
+POST /api/v1/risk/score
+X-API-Key: <RAKSHA_API_KEY>
+Content-Type: application/json
+```
+
+**The API returns:**
+
+```json
+{
+  "transaction_id": "txn_123",
+  "fraud_score": 0.91,
+  "chargeback_score": 0.67,
+  "risk_score": 0.826,
+  "decision": "BLOCK",
+  "reason_codes": [
+    "HIGH_FRAUD_RISK",
+    "DEVICE_VELOCITY",
+    "RING_ACTIVITY"
+  ],
+  "model_version": "..."
+}
+```
+
+API keys support:
+- Sandbox / Live environments
+- SHA-256 hashed storage
+- one-time secret visibility
+- tenant isolation
+- revocation
+
+---
+
+## 🔔 Webhooks
+
+RakshaAI can notify merchant systems after successful risk decisions.
+
+Webhook security uses:
+```
+HMAC-SHA256
+     +
+X-RakshaAI-Signature
+```
+
+The platform also records webhook delivery information and supports secret rotation.
+
+---
+
+## 📊 Risk Command Center
+
+The frontend provides a merchant-facing control center for:
+
+- **Overview**
+  - transaction volume
+  - fraud activity
+  - risk trends
+  - money saved
+- **Transactions**
+  - transaction-level risk
+  - model scores
+  - decision
+  - reason codes
+  - customer/payment information
+- **Cases**
+  - analyst investigation
+  - resolution
+  - overrides
+  - decision history
+- **Analytics**
+  - fraud performance
+  - chargeback risk
+  - risk trends
+  - attack activity
+- **Policy**
+  - merchant risk appetite
+  - decision thresholds
+- **Developer**
+  - API keys
+  - Sandbox / Live integration
+- **AI Analyst**
+  - natural-language investigation
+  - RAG-grounded answers
+  - persistent conversations
+
+---
+
+## 📈 Machine Learning
+
+RakshaAI uses XGBoost classification models for fraud and chargeback prediction.
+
+### Training approach
+
+The models use a temporal train/test split rather than randomly mixing historical events.
+
+```
+Historical Transactions
+          │
+          ▼
+    Feature Engineering
+          │
+          ▼
+ ┌─────────────────────┐
+ │ Temporal Split      │
+ │                     │
+ │ 80% → Training      │
+ │ 20% → Holdout       │
+ └─────────────────────┘
+          │
+          ▼
+      XGBoost Models
+          │
+          ▼
+       Evaluation
+```
+
+### Holdout performance
+
+#### Fraud Model
+| Metric | Result |
+| :--- | :--- |
+| **Precision** | 95.5% |
+| **Recall** | 92.6% |
+| **PR-AUC** | 0.947 |
+| **ROC-AUC** | 0.966 |
+
+#### Chargeback Model
+| Metric | Result |
+| :--- | :--- |
+| **Precision** | 48.8% |
+| **Recall** | 96.9% |
+
+The chargeback model intentionally prioritizes **high recall** because missing a genuinely risky transaction can carry significant downstream cost.
+
+---
+
+## 🔬 Explainability
+
+RakshaAI uses exact tree-based contribution analysis for the XGBoost models.
+
+This enables the system to connect model output with interpretable contributing features.
+
+The resulting signals feed the reason-code layer used by analysts and the dashboard.
+
+---
+
+## 🧱 Technology Stack
+
+### Frontend
+- React
+- Vite
+- JavaScript
+- React Markdown
+- REST API integration
+
+### Backend
+- Python
+- FastAPI
+- SQLAlchemy
+- JWT authentication
+- bcrypt password hashing
+
+### Machine Learning
+- XGBoost
+- scikit-learn
+- SHAP-style tree contributions
+- shared feature engineering pipeline
+
+### AI
+- Groq
+- RAG
+- vector embeddings
+- retrieval-based grounding
+
+### Database
+- PostgreSQL for production
+- SQLite for local development
+
+### Security
+- JWT authentication
+- tenant isolation
+- SHA-256 API-key hashing
+- HMAC-SHA256 webhook signatures
+- encrypted webhook secrets
+- CORS configuration
+- production secret enforcement
+
+---
+
+## 🏗️ Project Structure
+
+```
+RakshaAi/
+│
+├── backend/
+│   ├── app/
+│   │   ├── routers/
+│   │   ├── services/
+│   │   ├── models.py
+│   │   ├── schemas.py
+│   │   ├── database.py
+│   │   ├── config.py
+│   │   └── main.py
+│   │
+│   ├── ml/
+│   ├── tests/
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── views/
+│   │   ├── lib/
+│   │   └── App.jsx
+│   │
+│   └── package.json
+│
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## Prerequisites
+## 🚀 Run Locally
 
-- **Python 3.11+**
-- **Node.js 18+** (tested on Node 22)
+### 1. Clone
+```bash
+git clone https://github.com/SudikshA-0/RakshaAi.git
+cd RakshaAi
+```
 
-That's it. **No LLM accounts, payment providers, or external services are required.** The entire system runs locally and is fully self-contained.
-
----
-
-## Quick start
-
-### 1. Backend
-
+### 2. Backend
 ```bash
 cd backend
-python -m venv .venv
-source .venv/Scripts/activate    # Windows Git Bash
-# source .venv/bin/activate      # macOS / Linux
+
+python -m venv venv
+```
+
+**Windows:**
+```powershell
+venv\Scripts\activate
+```
+
+**Install dependencies:**
+```bash
 pip install -r requirements.txt
 ```
 
-Generate the synthetic dataset and train the two models (one-time; artifacts are committed but this regenerates them):
+**Environment variables:**
 
-```bash
-python -m ml_pipeline.generate_data
+Create `backend/.env`:
+
+```env
+RAKSHAII_SECRET_KEY=your-secret-key
+DATABASE_URL=sqlite:///./rakshaai.db
+
+GROQ_API_KEY=your-groq-key
+GROQ_MODEL=openai/gpt-oss-120b
+
+ENVIRONMENT=development
+CORS_ORIGINS=http://localhost:5173
 ```
+
+> ⚠️ *Never commit `.env` files or API keys.*
+
+**Start API:**
 ```bash
-python -m ml_pipeline.train
+python -m uvicorn app.main:app --reload --port 8000
 ```
 
-Run the API (it auto-creates the SQLite DB, seeds it from the dataset on first boot, and warms the models into memory):
+- **Backend:** `http://localhost:8000`
+- **API documentation:** `http://localhost:8000/docs`
 
-```bash
-uvicorn app.main:app --host 127.0.0.1 --port 8000
-```
+### 3. Frontend
 
-The backend is now live at **http://127.0.0.1:8000** — health check at `/api/health`, interactive API docs at `/docs`.
-
-### 2. Frontend
-
-In a second terminal:
+Open another terminal:
 
 ```bash
 cd frontend
 npm install
-```
-```bash
 npm run dev
 ```
 
-Open **http://localhost:5173**. The Vite dev server proxies all `/api/*` calls to the backend on port 8000, so no CORS or URL config is needed.
-
-Sign in with the seeded demo merchant using `demo@rakshaai.io` / `demo12345`, or
-create an isolated merchant organization from the sign-up screen.
+- **Frontend:** `http://localhost:5173`
 
 ---
 
-## Merchant API (Phase 2)
+## 🧪 Testing
 
-Dashboard users can create sandbox (`rsk_test_…`) and live (`rsk_live_…`) keys
-through the authenticated developer API. The raw secret is returned only by the
-creation response; RakshaAI stores a one-way hash and supports revocation.
+RakshaAI includes automated backend coverage across:
+- authentication
+- tenant isolation
+- transaction APIs
+- cases
+- analytics
+- API keys
+- public risk scoring
+- webhooks
+- RAG
+- AI Analyst
+- Groq integration
+- persistent conversations
+- money-saved calculations
+- transaction investigation
 
-```bash
-# Authenticate as a dashboard user, then create a sandbox key.
-curl -X POST http://127.0.0.1:8000/api/developer/keys \
-  -H "Authorization: Bearer <dashboard-jwt>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Local integration","environment":"sandbox"}'
-
-# Score a merchant transaction. The API key determines the organization;
-# transaction history, policy, velocity and ring detection stay tenant-scoped.
-curl -X POST http://127.0.0.1:8000/api/v1/risk/score \
-  -H "X-API-Key: rsk_test_<secret>" \
-  -H "Content-Type: application/json" \
-  -d '{"amount":1234,"customer_id":"CUST_42","card_hash":"tok_42","device_id":"dev_42","email":"buyer@example.com"}'
-```
-
-The response includes a request ID, fraud and chargeback probabilities, blended
-risk score, decision, reason codes, model version, and ring-risk signals. API
-keys are intentionally separate from dashboard JWTs.
+### Current validation:
+- **Backend Tests:** `42/42 PASS`
+- **Frontend Build:** `PASS`
 
 ---
 
-## Webhooks Integration
+## 🔒 Security Design
 
-Merchants can configure tenant-scoped HTTPS webhooks via the Developer panel or `/api/developer/webhooks` endpoints to receive real-time decision events (`risk.decision.created`, `risk.transaction.blocked`, `risk.transaction.review`).
+Security was treated as a core SaaS requirement rather than a final-stage addition.
 
-### Webhook Signature Verification
-Each delivery includes HTTP headers:
-- `X-RakshaAI-Signature`: Hex-encoded HMAC-SHA256 of the raw canonical payload body, signed with the webhook's secret.
-- `X-RakshaAI-Event-Id`: Unique event identifier for idempotency.
+- **Authentication**  
+  JWT-based authentication with password hashing.
 
-To verify a webhook payload:
-```python
-import hmac, hashlib
+- **API Keys**  
+  Raw API secrets are not persisted. Only hashed credentials are stored.
 
-expected_sig = hmac.new(signing_secret.encode("utf-8"), request_bytes, hashlib.sha256).hexdigest()
-is_valid = hmac.compare_digest(expected_sig, request_headers["X-RakshaAI-Signature"])
-```
+- **Tenant Isolation**  
+  Database queries enforce organization ownership.
 
+- **Webhooks**  
+  HMAC-SHA256 signatures protect webhook authenticity.
 
----
+- **Secrets**  
+  Production deployments require explicit secret configuration.
 
-## Using the dashboard
-
-- **Command Center** — live KPIs (transactions scored, fraud blocked, net loss prevented, model precision), transaction-flow trend, decision mix, threat-pattern breakdown, top risk drivers, and a live transaction stream. Click **Start live feed** to stream synthetic traffic, or **Simulate Attack** to launch a card-testing ring or high-value bust-out against the engine and watch it get neutralized.
-- **Live Transactions** — every scored transaction, filterable by decision, searchable by ref/customer/device/email, with a ring-only toggle. Click any row for a full explainability drawer (risk gauge, fraud & chargeback scores, reason codes, linked entities, ground-truth verdict).
-- **Case Queue** — human-in-the-loop review. Confirm fraud or release as legit; every decision is written back as labeled training data (visible in the learning-loop counters).
-- **Model Performance** — precision/recall/F1/AUC for both models, PR curves, confusion matrices, the cost-sensitive threshold-optimization curve (rupee loss minimized, not just accuracy), and global feature importance.
-- **Risk Policy** — tune risk sensitivity and chargeback weight, toggle auto-block. Changes are persisted and applied to live scoring instantly (the effective decision thresholds shift in real time).
+- **Frontend**  
+  LLM and backend secrets are never exposed to the React client.
 
 ---
 
-## Configuration (optional)
+## 💵 Measuring Business Impact
 
-Everything works out of the box. These are the *only* knobs, all optional:
+RakshaAI tracks money saved / loss prevented, rather than presenting model accuracy as the only business metric.
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `RAKSHAAI_DATABASE_URL` | `sqlite:///backend/rakshaai.db` | Point at Postgres/MySQL instead of SQLite, e.g. `postgresql+psycopg://user:pass@host/db`. |
-| `RAKSHAAI_SECRET_KEY` | development-only fallback | Required as a long random secret in production for dashboard JWT signing. |
-| `RAKSHAAI_TOKEN_EXPIRE_MIN` | `1440` | Dashboard JWT lifetime in minutes. |
+The calculation uses the same canonical loss-prevention logic throughout:
 
-Business/cost tunables (chargeback fee, false-positive margin, default policy, ML seed/split) live in [`backend/app/config.py`](backend/app/config.py) and are editable without touching code elsewhere.
+$$\text{Prevented Loss} = (\text{Fraud Transaction Amount} + \text{Chargeback Cost}) \times \text{Action Mitigation}$$
 
----
+This allows the dashboard to answer a business-critical question:
 
-## Resetting / re-seeding
-
-Delete `backend/rakshaai.db` and restart the backend — it will re-seed a fresh database from `backend/data/transactions.csv` on boot. To regenerate the underlying dataset and models entirely, re-run the two `ml_pipeline` commands above.
+> *"How much money did our risk system actually protect?"*
 
 ---
 
-## Project layout
+## 🧪 Sandbox & Threat Testing
+
+RakshaAI includes a transaction simulator for testing risk behavior.
+
+It can generate controlled scenarios such as:
 
 ```
-Project2/
-├── backend/
-│   ├── app/
-│   │   ├── main.py            # FastAPI entrypoint (seeds + warms model on boot)
-│   │   ├── config.py          # all tunables (paths, cost model, default policy)
-│   │   ├── database.py        # SQLAlchemy engine/session
-│   │   ├── models.py          # ORM tables
-│   │   ├── schemas.py         # Pydantic request/response models
-│   │   ├── routers/           # /api/transactions, /cases, /analytics, /policy, /simulate
-│   │   ├── services/          # decision engine, pipeline, simulator, seeder
-│   │   └── ml/                # scorer + trained artifacts (models, metrics, metadata)
-│   ├── ml_pipeline/
-│   │   ├── generate_data.py   # synthetic transaction generator
-│   │   └── train.py           # trains fraud + chargeback models, writes metrics
-│   ├── data/transactions.csv  # generated dataset
-│   ├── requirements.txt
-│   └── rakshaai.db            # SQLite (auto-created)
-└── frontend/
-    ├── src/
-    │   ├── views/             # Dashboard, Transactions, Cases, ModelPerformance, Policy
-    │   ├── components/        # sidebar, charts, primitives, transaction drawer, live feed
-    │   └── lib/               # api client, formatters, theme
-    ├── vite.config.js         # dev server + /api proxy to :8000
-    └── package.json
+Normal Payment
+      │
+      ├── Card Testing
+      │
+      ├── Account Takeover
+      │
+      ├── High-Value Bust-Out
+      │
+      └── Coordinated Ring Activity
 ```
+
+This allows merchants and developers to observe how the risk engine responds before integrating real payment traffic.
+
+---
+
+## 🏆 Why RakshaAI?
+
+Traditional fraud systems often optimize for:
+- *Fraud detection accuracy*
+
+RakshaAI expands the objective:
+- **Risk detection + chargeback prediction + coordinated abuse detection + explainability + economic decisioning**
+
+The result is a system designed around the merchant's actual objective:
+
+> **Protect revenue while preserving legitimate payment conversion.**
+
+---
+
+## 🛣️ Roadmap
+
+### Current
+- [x] Real-time transaction scoring
+- [x] Fraud model
+- [x] Chargeback model
+- [x] Blended risk score
+- [x] Risk decision engine
+- [x] Explainable reason codes
+- [x] Ring detection
+- [x] Merchant risk appetite
+- [x] Cases and analyst overrides
+- [x] Money-saved analytics
+- [x] Multi-tenant SaaS architecture
+- [x] JWT authentication
+- [x] Tenant-scoped API keys
+- [x] Public risk scoring API
+- [x] Webhooks
+- [x] RAG
+- [x] AI Analyst
+- [x] Persistent AI conversations
+- [x] Groq integration
+- [x] PostgreSQL production support
+
+### Next
+- [ ] Production cloud deployment
+- [ ] Production monitoring
+- [ ] Usage-based billing
+- [ ] Advanced fraud graph
+- [ ] More real-world payment signals
+- [ ] Automated policy optimization
+- [ ] Advanced merchant-level risk analytics
+
+---
+
+## 🎥 Buildathon Demo Flow
+
+A recommended demonstration:
+
+```
+01 → Merchant Dashboard
+       ↓
+02 → Normal transaction → ALLOW
+       ↓
+03 → Card-testing attack → BLOCK
+       ↓
+04 → Show ring detection
+       ↓
+05 → Account takeover scenario
+       ↓
+06 → Explain why risk increased
+       ↓
+07 → Show Money Saved
+       ↓
+08 → Ask AI Analyst:
+       "How much money did we save today?"
+       ↓
+09 → Show Developer API
+       ↓
+10 → Show webhook integration
+```
+
+The important story is not:
+> *"Look at our dashboard."*
+
+It is:
+> **"RakshaAI observes payment risk, understands what is happening, chooses the safest economic action, explains that decision, and gives the merchant control."**
+
+---
+
+## ⚡ Razorpay Buildathon
+
+RakshaAI is built around a payment-risk problem directly relevant to modern payment infrastructure:
+
+> *How can payment platforms help merchants reduce fraud and chargeback losses without unnecessarily blocking legitimate customers?*
+
+The project explores this through:
+- real-time payment risk scoring
+- fraud + chargeback prediction
+- transaction-level decisioning
+- coordinated abuse detection
+- explainable AI
+- merchant-specific risk policies
+- API-first integration
+- webhook-driven workflows
+- merchant intelligence through an AI Analyst
+
+---
+
+## 👨‍💻 Project
+
+**RakshaAI — Merchant Risk Command Center**  
+*Built for the Razorpay Buildathon 2026.*
+
+**Repository:** [github.com/SudikshA-0/RakshaAi](https://github.com/SudikshA-0/RakshaAi)
