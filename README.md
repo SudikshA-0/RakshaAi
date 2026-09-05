@@ -1,9 +1,16 @@
 # 🛡️ RakshaAI — Merchant Risk Command Center
-🚀 Live Demo: https://rakshaai-frontend.onrender.com
 
 > **Stop fraud. Prevent chargebacks. Protect revenue.**
 
 RakshaAI is an AI-powered merchant risk decisioning platform that evaluates payment transactions in real time, predicts both fraud and future chargeback risk, detects coordinated abuse patterns, and recommends the lowest-cost safe action — without turning legitimate customers away unnecessarily.
+
+# RakshaAI — Merchant Risk Command Center
+
+🚀 Live Demo: https://rakshaai-frontend.onrender.com
+
+📦 GitHub: https://github.com/SudikshA-0/RakshaAi
+
+🔌 API: https://rakshaai-backend-bp6k.onrender.com/docs
 
 ---
 
